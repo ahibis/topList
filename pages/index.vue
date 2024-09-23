@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1 class="text-3xl text-center mt-5">Поиск ТОП №{{ round+1 }}. Ход №{{ step }}</h1>
+    <h1 class="text-3xl text-center mt-5">Поиск ТОП №{{ round + 1 }}. Ход №{{ step }}</h1>
     <div class="flex justify-around">
       <PickPhoto :url="leftUrl" @picked="pickPhoto" :id="leftId" />
       <PickPhoto :url="rightUrl" @picked="pickPhoto" :id="rightId" />
@@ -20,7 +20,7 @@ import TopListComp from "~/components/TopList.vue";
 // import streamers from "~/assets/streamers.json";
 import tikTok from "~/assets/tikTok.json";
 
-const urls = tikTok.slice(0,16);
+const urls = tikTok.slice(0, 16);
 const topList = new NodeItem(
   -1,
   urls.map((url, i) => new NodeItem(i))
