@@ -23,11 +23,9 @@ export default Vue.extend({
     url: String,
     id: Number
   },
-  data() {
-    return {
-      isLoad: false
-    }
-  },
+  data: () => ({
+    isLoad: false
+  }),
   methods: {
     pickPicture() {
       this.$emit("picked", this.id)

@@ -33,17 +33,15 @@ export default Vue.extend({
     TopList: TopListComp,
     PickPhoto,
   },
-  data() {
-    return {
-      urls,
-      leftId: 0,
-      rightId: 0,
-      isWin: false,
-      topListUrls: [] as string[],
-      step: 0,
-      round: 0
-    };
-  },
+  data: () => ({
+    urls,
+    leftId: 0,
+    rightId: 0,
+    isWin: false,
+    topListUrls: [] as string[],
+    step: 0,
+    round: 0
+  }),
   methods: {
     pickPhoto(id: number) {
       const $data = this.$data;
