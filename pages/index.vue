@@ -51,39 +51,42 @@ export default Vue.extend({
   },
   methods: {
     pickPhoto(id: number) {
+      const $data = this.$data;
       if (!conflictNode) return;
       conflictNode?.solveConflict(
         id,
-        id == this.$data.leftId ? this.$data.rightId : this.$data.leftId
+        id == $data.leftId ? $data.rightId : $data.leftId
       );
       this.getConflict();
     },
     getConflict() {
       const data = topList.getConflict();
+      const $data = this.$data;
       if (!data) {
-        this.$data.isWin = true;
+        $data.isWin = true;
         conflictNode = undefined;
         const topListIds = topList.getChildList();
         // topListIds.shift();
         console.log(topListIds);
-        this.$data.topListUrls = topListIds.map((id) => this.$data.urls[id]);
+        $data.topListUrls = topListIds.map((id) => $data.urls[id]);
         return;
       }
-      this.$data.step += 1
-      this.$data.leftId = data.childsId[0];
-      this.$data.rightId = data.childsId[1];
-      console.log(this.$data.leftId, this.$data.rightId);
+      $data.step += 1
+      $data.leftId = data.childsId[0];
+      $data.rightId = data.childsId[1];
+      console.log($data.leftId, $data.rightId);
       conflictNode = data.node;
       console.log(topList.toString());
-      this.$data.round = topList.getDepth();
+      $data.round = topList.getDepth();
     },
     onkeydown(e: KeyboardEvent) {
+      const $data = this.$data;
       const key = e.key;
       if (key == "ArrowLeft" || key == "a") {
-        this.$data.pickPhoto(this.$data.leftId);
+        $data.pickPhoto($data.leftId);
       }
       if (key == "ArrowRight" || key == "d") {
-        this.$data.pickPhoto(this.$data.rightId);
+        $data.pickPhoto($data.rightId);
       }
       
     }
