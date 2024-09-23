@@ -6,22 +6,17 @@
       <PickPhoto :url="rightUrl" @picked="pickPhoto" :id="rightId" />
     </div>
     <div>
-      <div v-for="(url, id) in topListUrls" class="flex">
-        <div class="w-20">{{ id + 1 }} место</div>
-        <div class="w-40 aspect-square rounded-xl flex justify-center bg-slate-100 mb-3 transition hover:scale-105 duration-300">
-          <img :src="url" alt="" class="h-full" />
-        </div>
-        
-      </div>
+      <TopList :topListUrls="topListUrls" />
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
-import MyButton from "~/components/MyButton.vue";
-import PickPhoto from "~/components/PickPhoto.vue";
 import { NodeItem } from "~/assets/topList";
+import PickPhoto from "~/components/PickPhoto.vue";
+import TopListComp from "~/components/TopList.vue";
+
 // import streamers from "~/assets/streamers.json";
 import tikTok from "~/assets/tikTok.json";
 
@@ -35,7 +30,7 @@ let conflictNode: NodeItem | undefined;
 export default Vue.extend({
   name: "IndexPage",
   components: {
-    MyButton,
+    TopList: TopListComp,
     PickPhoto,
   },
   data() {
@@ -66,7 +61,6 @@ export default Vue.extend({
         $data.isWin = true;
         conflictNode = undefined;
         const topListIds = topList.getChildList();
-        // topListIds.shift();
         console.log(topListIds);
         $data.topListUrls = topListIds.map((id) => $data.urls[id]);
         return;
@@ -83,12 +77,11 @@ export default Vue.extend({
       const $data = this.$data;
       const key = e.key;
       if (key == "ArrowLeft" || key == "a") {
-        $data.pickPhoto($data.leftId);
+        this.pickPhoto($data.leftId);
       }
       if (key == "ArrowRight" || key == "d") {
-        $data.pickPhoto($data.rightId);
+        this.pickPhoto($data.rightId);
       }
-      
     }
   },
   computed: {

@@ -10,17 +10,22 @@
 </template>
 
 <script>
+import Vue from 'vue';
 import MyButton from '~/components/MyButton.vue'
 
-export default {
+export default Vue.extend({
   name: 'PickPhoto',
   components: {
     MyButton
   },
   props: {
     url: String,
-    id: Number,
-    isLoad: false
+    id: Number
+  },
+  data() {
+    return {
+      isLoad: false
+    }
   },
   methods: {
     pickPicture(){
@@ -36,7 +41,7 @@ export default {
     }
   }
   // emits: ['picked']
-}
+})
 </script>
 
 <style>
