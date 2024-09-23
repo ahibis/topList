@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1 class="text-3xl text-center mt-5">Поиск топ №{{ round+1 }}. Ход №{{ step }}</h1>
+    <h1 class="text-3xl text-center mt-5">Поиск ТОП №{{ round+1 }}. Ход №{{ step }}</h1>
     <div class="flex justify-around">
       <PickPhoto :url="leftUrl" @picked="pickPhoto" :id="leftId" />
       <PickPhoto :url="rightUrl" @picked="pickPhoto" :id="rightId" />
@@ -18,6 +18,7 @@
 </template>
 
 <script lang="ts">
+import Vue from "vue";
 import MyButton from "~/components/MyButton.vue";
 import PickPhoto from "~/components/PickPhoto.vue";
 import { NodeItem } from "~/assets/topList";
@@ -29,11 +30,9 @@ const topList = new NodeItem(
   -1,
   urls.map((url, i) => new NodeItem(i))
 );
+let conflictNode: NodeItem | undefined;
 
-
-
-
-export default {
+export default Vue.extend({
   name: "IndexPage",
   components: {
     MyButton,
@@ -45,7 +44,6 @@ export default {
       leftId: 0,
       rightId: 0,
       isWin: false,
-      conflictNode: undefined as NodeItem | undefined,
       topListUrls: [] as string[],
       step: 0,
       round: 0
@@ -53,57 +51,57 @@ export default {
   },
   methods: {
     pickPhoto(id: number) {
-      if (!this.conflictNode) return;
-      this.conflictNode?.solveConflict(
+      if (!conflictNode) return;
+      conflictNode?.solveConflict(
         id,
-        id == this.leftId ? this.rightId : this.leftId
+        id == this.$data.leftId ? this.$data.rightId : this.$data.leftId
       );
       this.getConflict();
     },
     getConflict() {
       const data = topList.getConflict();
       if (!data) {
-        this.isWin = true;
-        this.conflictNode = undefined;
+        this.$data.isWin = true;
+        conflictNode = undefined;
         const topListIds = topList.getChildList();
         // topListIds.shift();
         console.log(topListIds);
-        this.topListUrls = topListIds.map((id) => this.urls[id]);
+        this.$data.topListUrls = topListIds.map((id) => this.$data.urls[id]);
         return;
       }
-      this.step += 1
-      this.leftId = data.childsId[0];
-      this.rightId = data.childsId[1];
-      console.log(this.leftId, this.rightId);
-      this.conflictNode = data.node;
+      this.$data.step += 1
+      this.$data.leftId = data.childsId[0];
+      this.$data.rightId = data.childsId[1];
+      console.log(this.$data.leftId, this.$data.rightId);
+      conflictNode = data.node;
       console.log(topList.toString());
-      this.round = topList.getDepth();
+      this.$data.round = topList.getDepth();
     },
     onkeydown(e: KeyboardEvent) {
       const key = e.key;
       if (key == "ArrowLeft" || key == "a") {
-        this.pickPhoto(this.leftId);
+        this.$data.pickPhoto(this.$data.leftId);
       }
       if (key == "ArrowRight" || key == "d") {
-        this.pickPhoto(this.rightId);
+        this.$data.pickPhoto(this.$data.rightId);
       }
       
     }
   },
   computed: {
     leftUrl() {
-      return this.urls[this.leftId];
+      return this.$data.urls[this.$data.leftId];
     },
     rightUrl() {
-      return this.urls[this.rightId];
+      return this.$data.urls[this.$data.rightId];
     },
   },
   mounted() {
     this.getConflict();
     document.addEventListener("keydown", this.onkeydown)
   },
-  unmounted() {
+  destroyed() {
     removeEventListener("keydown", this.onkeydown);
   },
-};
+});
 </script>
