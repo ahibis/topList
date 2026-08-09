@@ -6,7 +6,10 @@ interface ConflictNode {
 export class NodeItem {
   id: number;
   childs: NodeItem[] = [];
+  grandsons = 0;
   conflictIndex = 0;
+  topNode: NodeItem = this;
+
   constructor(id: number, childs: NodeItem[] = []) {
     this.id = id;
     this.childs = childs;
@@ -17,7 +20,10 @@ export class NodeItem {
     }
     const { childs, conflictIndex } = this;
     if (childs.length == 0) return undefined;
-    if (childs.length == 1) return childs[0].getConflict();
+    if (childs.length == 1) {
+      
+      return childs[0].getConflict();
+    } 
     const res = {
       node: this,
       childsId: [childs[0 + conflictIndex].id, childs[1 + conflictIndex].id],
@@ -30,6 +36,7 @@ export class NodeItem {
     const best = childs.find((child) => child.id == bestId)!;
     const worst = childs.find((child) => child.id == worstId)!;
     this.childs = childs.filter((child) => child.id != worstId);
+    this.grandsons += 1;
     best.childs.push(worst);
   }
 
