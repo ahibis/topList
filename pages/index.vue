@@ -1,8 +1,8 @@
 <template>
   <div v-if="topList">
     <div class="p-5">
-      Количество в группе <input class=" rounded text-md" type="number" :value="topList.maxOpponentsOnGroupNeed"
-        @input="e => topList.tryChangeOpponentsOnGroup(e.target.value)" step="1" min="2" max="10" />
+      Количество в группе <input class=" rounded text-md" type="number" v-model="maxOpponentsOnGroupNeed" step="1"
+        min="2" max="30" />
     </div>
 
     <div v-if="!topList.isWin">
@@ -10,7 +10,8 @@
         topList.stepsOnStage }}</h1>
       <div class="flex justify-around" v-for="line in indexesGrid">
         <template v-for="i in line">
-          <PickPhoto :url="opponentsData[i].url" :name="opponentsData[i].name" @picked="chooseWinner(i)" :id="0" />
+          <PickPhoto :url="opponentsData[i].url" :name="opponentsData[i].name" @picked="chooseWinner(i)" :id="i"
+            :score="topList.opponents[i].score" />
         </template>
 
       </div>
@@ -33,6 +34,7 @@ import PickPhoto from "~/components/PickPhoto.vue";
 import streamers from "~/assets/streamers.json";
 import tikTok from "~/assets/tikTok.json";
 import { debug } from "console";
+import { watch } from "fs";
 
 function randomize<T>(arr: T[]): T[] {
   return arr.sort(() => Math.random() - 0.5);
@@ -50,12 +52,14 @@ class Member<T> {
   id: number;
   data: T;
   losingOpponents: Member<T>[] = [];
+  score = 0;
   constructor(id: number, data: T) {
     this.id = id;
     this.data = data;
   }
   defeat(opponent: Member<T>) {
     this.losingOpponents.push(opponent);
+    this.score += opponent.score + 1
   }
 }
 
@@ -78,40 +82,64 @@ class TopList2<T> {
   }
 
   smartMixMembers(members: Member<T>[]) {
-    const _members = [...members].sort((a, b) => b.losingOpponents.length - a.losingOpponents.length);
-    const count = _members.length;
-    if (count < 4) return _members;
-    const needSwap = Math.floor(count / 4);
-    const gap = 1 + (needSwap - 1) * 2;
-    for (let i = 0; i < needSwap; i++) {
-      const firstIndex = 1 + i * 2;
-      const secondIndex = 1 + i * 2 + gap;
-      const first = _members[firstIndex];
-      _members[firstIndex] = _members[secondIndex];
-      _members[secondIndex] = first;
+    const _members = [...members].sort((a, b) => b.score - a.score);
+    let count = _members.length;
+    if (count < this.maxOpponentsOnGroup + 1) return _members;
+    const countOnGroup = this.maxOpponentsOnGroup;
+    const res: Member<T | undefined>[] = new Array(count).fill(undefined);
+    const groupCount = Math.ceil(count / countOnGroup);
+    let index = 0;
+    for (let i = 0; i < countOnGroup; i++) {
+      for (let j = 0; j < groupCount; j++) {
+        const ind = j * countOnGroup + i;
+        if (ind >= count) continue;
+        res[ind] = _members[index];
+        index += 1;
+      }
     }
-    return _members
+    return res as Member<T>[]
+
   }
 
   countStepsOnStage(opponentsCount: number) {
     let res = 0;
     let count = opponentsCount;
     while (count > 1) {
-      const next = Math.floor(count / this.maxOpponentsOnGroup);
-      res += next;
-      count = next + count - next * this.maxOpponentsOnGroup;
+      let next = Math.floor(count / this.maxOpponentsOnGroup);
+      if ((count % this.maxOpponentsOnGroup) != 0) {
+        next += 1
+      }
+      let add = next;
+      if ((count % this.maxOpponentsOnGroup) == 1) {
+        add -= 1;
+      }
+      console.log("j", add, next)
+      res += add;
+      count = next
     }
     return res
   }
 
   tryChangeOpponentsOnGroup(countFrom: number | string) {
     let count = Number.parseInt(countFrom as string)
-    if (count < 2 || count > 10) return;
+    if (isNaN(count)) {
+      return
+    }
+    console.log(count)
+    if (count < 2) {
+      this.maxOpponentsOnGroupNeed = 2;
+      return;
+    }
+    if (count > 30) {
+      this.maxOpponentsOnGroupNeed = 30;
+      return
+    }
     this.maxOpponentsOnGroupNeed = count
     if (this.opponentGroupIndex == 0) {
       this.maxOpponentsOnGroup = count
     }
     this.stepsOnStage = this.countStepsOnStage(this.currentOpponents.length);
+    this.currentOpponents = this.smartMixMembers(this.currentOpponents);
     this.getNextOpponents()
   }
 
@@ -197,7 +225,8 @@ export default Vue.extend({
   },
   data: () => ({
     urls,
-    topList: undefined
+    topList: undefined,
+    maxOpponentsOnGroupNeed: 2
   }),
   methods: {
     chooseWinner(index: number) {
@@ -206,6 +235,10 @@ export default Vue.extend({
     onkeydown(e: KeyboardEvent) {
       const $data = this.$data;
       const key = e.key;
+
+      if (e.target instanceof HTMLInputElement) {
+        return
+      }
       if (key == "ArrowLeft" || key == "a" || key == "1") {
         this.chooseWinner(0);
         return
@@ -240,6 +273,7 @@ export default Vue.extend({
       return (this.$data.topList as TopList2<string>).arrangedList.map(d => d.data);
     },
     indexesGrid() {
+      // console.log("перестройка")
       const maxOpponentsCount = Math.min((this.$data.topList as TopList2<string>).maxOpponentsOnGroup, this.$data.topList.opponents.length);
       const indexes: number[][] = [];
       let line: number[] = [];
@@ -260,8 +294,14 @@ export default Vue.extend({
         indexes.push(line)
       }
       return indexes
-    }
+    },
 
+  },
+  watch: {
+    maxOpponentsOnGroupNeed(value) {
+      console.log("изменено", value)
+      this.$data.topList.tryChangeOpponentsOnGroup(value)
+    }
   },
 
   mounted() {
