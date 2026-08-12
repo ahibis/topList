@@ -77,12 +77,29 @@ class TopList2<T> {
     return this.opponentGroupIndex * this.maxOpponentsOnGroup
   }
 
+  smartMixMembers(members: Member<T>[]) {
+    const _members = [...members].sort((a, b) => b.losingOpponents.length - a.losingOpponents.length);
+    const count = _members.length;
+    if (count < 4) return _members;
+    const needSwap = Math.floor(count / 4);
+    const gap = 1 + (needSwap - 1) * 2;
+    for (let i = 0; i < needSwap; i++) {
+      const firstIndex = 1 + i * 2;
+      const secondIndex = 1 + i * 2 + gap;
+      const first = _members[firstIndex];
+      _members[firstIndex] = _members[secondIndex];
+      _members[secondIndex] = first;
+    }
+    return _members
+  }
+
   countStepsOnStage(opponentsCount: number) {
     let res = 0;
     let count = opponentsCount;
     while (count > 1) {
-      count = Math.ceil(count / this.maxOpponentsOnGroup);
-      res += count;
+      const next = Math.floor(count / this.maxOpponentsOnGroup);
+      res += next;
+      count = next + count - next * this.maxOpponentsOnGroup;
     }
     return res
   }
@@ -107,7 +124,7 @@ class TopList2<T> {
       if (this.currentOpponents.length == 1) {
         const winner = this.currentOpponents[0];
         this.arrangedList.push(winner);
-        const candidates = winner.losingOpponents;
+        const candidates = this.smartMixMembers(winner.losingOpponents);
         console.log("кандидаты", candidates.map(v => v.id))
         this.stage += 1;
         this.currentOpponents = candidates;
@@ -189,12 +206,12 @@ export default Vue.extend({
     onkeydown(e: KeyboardEvent) {
       const $data = this.$data;
       const key = e.key;
-      if (key == "ArrowLeft" || key == "a" || key == "0") {
+      if (key == "ArrowLeft" || key == "a" || key == "1") {
         this.chooseWinner(0);
         return
       }
       const maxOpponentsCount = ($data.topList as TopList2<string>).maxOpponentsOnGroup;
-      if (key == "ArrowRight" || key == "d" || key == "1") {
+      if (key == "ArrowRight" || key == "d" || key == "3") {
         if (maxOpponentsCount == 2) {
           this.chooseWinner(1);
         } else {
@@ -203,7 +220,7 @@ export default Vue.extend({
         return
       }
       if (key == "ArrowDown" || key == "s" || key == "2") {
-        this.chooseWinner(2);
+        this.chooseWinner(1);
         return
       }
       if (Number.isInteger(+key)) {
@@ -255,7 +272,7 @@ export default Vue.extend({
       fileName = `/${db}.json`;
     }
     fetch(fileName).then((r) => r.json()).then((data) => {
-      this.$data.topList = new TopList2(data.slice(0, count));
+      this.$data.topList = new TopList2(randomize(data).slice(0, count));
     });
     document.addEventListener("keydown", this.onkeydown)
   },
