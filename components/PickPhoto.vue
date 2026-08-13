@@ -1,6 +1,6 @@
 <template>
   <div class=" mx-10 w-[30%] mt-10" @click="pickPicture" :title="title">
-    <div v-if="name" class="flex justify-center w-full m-2 text-lg text-bold">{{ name }}({{ score }})</div>
+    <div v-if="name" class="flex justify-center w-full m-2 text-lg text-bold">{{ name }}</div>
     <div
       class="w-full aspect-square rounded-xl flex justify-center bg-slate-100 mb-3 transition hover:scale-105 duration-300">
       <img :src="url" alt="" :key="url" class="h-full transition duration-150" :class="{ 'opacity-0': isLoad }">
